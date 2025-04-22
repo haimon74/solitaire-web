@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { GameState, Card, PileType, TableauColumn } from '../types';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import { GameState, Card, PileType, TableauColumn, Suit } from '../types';
 import { Deck } from '../utils/Deck';
-import CardComponent from './Card';
+import CardContainer from './CardContainer';
+import UndoButton from './UndoButton';
 import './GameBoard.css';
 
 const GameBoard: React.FC = () => {
@@ -10,42 +11,69 @@ const GameBoard: React.FC = () => {
     stock: [],
     waste: [],
     foundations: [
-      { suit: 'hearts', cards: [] },
-      { suit: 'diamonds', cards: [] },
-      { suit: 'clubs', cards: [] },
-      { suit: 'spades', cards: [] },
+      { suit: 'hearts' as Suit, cards: [] },
+      { suit: 'diamonds' as Suit, cards: [] },
+      { suit: 'clubs' as Suit, cards: [] },
+      { suit: 'spades' as Suit, cards: [] },
     ],
     selectedCard: null,
     selectedPile: null,
     selectedPileIndex: null,
   });
 
+  const [gameHistory, setGameHistory] = useState<GameState[]>([]);
+
   useEffect(() => {
     initializeGame();
   }, []);
 
-  const initializeGame = () => {
+  const initializeGame = useCallback(() => {
     const deck = new Deck();
     const tableau = deck.dealTableau();
     const stock = deck.getRemainingCards();
 
-    setGameState(prevState => ({
-      ...prevState,
+    const initialState: GameState = {
       tableau,
       stock,
-    }));
-  };
+      waste: [],
+      foundations: [
+        { suit: 'hearts' as Suit, cards: [] },
+        { suit: 'diamonds' as Suit, cards: [] },
+        { suit: 'clubs' as Suit, cards: [] },
+        { suit: 'spades' as Suit, cards: [] },
+      ],
+      selectedCard: null,
+      selectedPile: null,
+      selectedPileIndex: null,
+    };
 
-  const handleCardClick = (card: Card, pileType: 'tableau' | 'waste' | 'foundation', pileIndex: number) => {
-    setGameState(prevState => ({
-      ...prevState,
+    setGameState(initialState);
+    setGameHistory([initialState]);
+  }, []);
+
+  const updateGameState = useCallback((newState: GameState) => {
+    setGameState(newState);
+    setGameHistory(prev => [...prev, newState]);
+  }, []);
+
+  const handleUndo = useCallback(() => {
+    if (gameHistory.length > 1) {
+      const previousState = gameHistory[gameHistory.length - 2];
+      setGameState(previousState);
+      setGameHistory(prev => prev.slice(0, -1));
+    }
+  }, [gameHistory]);
+
+  const handleCardClick = useCallback((card: Card, pileType: 'tableau' | 'waste' | 'foundation', pileIndex: number) => {
+    updateGameState({
+      ...gameState,
       selectedCard: card,
       selectedPile: pileType,
       selectedPileIndex: pileIndex,
-    }));
-  };
+    });
+  }, [gameState, updateGameState]);
 
-  const handleCardDoubleClick = (card: Card, pileType: 'tableau' | 'waste' | 'foundation', pileIndex: number) => {
+  const handleCardDoubleClick = useCallback((card: Card, pileType: 'tableau' | 'waste' | 'foundation', pileIndex: number) => {
     if (!card.isFaceUp) return;
 
     // Try to move the card to any foundation pile
@@ -70,32 +98,9 @@ const GameBoard: React.FC = () => {
         break;
       }
     }
-  };
+  }, [gameState]);
 
-  const moveSingleCardToFoundation = (card: Card, sourcePile: string, sourcePileIndex: number, targetPileIndex: number, sourceCardIndex?: number) => {
-    setGameState(prevState => {
-      const newState = JSON.parse(JSON.stringify(prevState));
-      
-      if (sourcePile === 'tableau') {
-        const sourceColumn = newState.tableau[sourcePileIndex];
-        // Remove the specific card
-        sourceColumn.cards.splice(sourceCardIndex, 1);
-        // Reveal the new top card if it exists and is face down
-        if (sourceColumn.cards.length > 0 && !sourceColumn.cards[sourceColumn.cards.length - 1].isFaceUp) {
-          sourceColumn.cards[sourceColumn.cards.length - 1].isFaceUp = true;
-        }
-      } else if (sourcePile === 'waste') {
-        newState.waste = newState.waste.slice(0, -1);
-      }
-      
-      // Add the card to the foundation
-      newState.foundations[targetPileIndex].cards.push(card);
-      
-      return newState;
-    });
-  };
-
-  const handleDragStart = (e: React.DragEvent, card: Card, pileType: 'tableau' | 'waste' | 'foundation', pileIndex: number) => {
+  const handleCardDragStart = useCallback((e: React.DragEvent, card: Card, pileType: 'tableau' | 'waste' | 'foundation', pileIndex: number) => {
     if (pileType === 'tableau') {
       const column = gameState.tableau[pileIndex];
       const cardIndex = column.cards.findIndex(c => c === card);
@@ -117,9 +122,13 @@ const GameBoard: React.FC = () => {
         sourcePileIndex: pileIndex,
       }));
     }
-  };
+  }, [gameState]);
 
-  const handleDrop = (e: React.DragEvent, targetPileType: 'tableau' | 'waste' | 'foundation', targetPileIndex: number) => {
+  const handleCardDragEnd = useCallback((e: React.DragEvent) => {
+    // Reset any drag-related state if needed
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent, targetPileType: 'tableau' | 'waste' | 'foundation', targetPileIndex: number) => {
     e.preventDefault();
     const data = JSON.parse(e.dataTransfer.getData('text/plain'));
     const { cards: draggedCards, sourcePile, sourcePileIndex, sourceCardIndex } = data;
@@ -148,98 +157,171 @@ const GameBoard: React.FC = () => {
         }
       }
     }
-  };
+  }, [gameState]);
 
-  const moveCardsToTableau = (cards: Card[], sourcePile: string, sourcePileIndex: number, targetPileIndex: number, sourceCardIndex?: number) => {
-    setGameState(prevState => {
-      // Create a deep copy of the state to avoid reference issues
-      const newState = JSON.parse(JSON.stringify(prevState));
-      
-      if (sourcePile === 'tableau') {
-        const sourceColumn = newState.tableau[sourcePileIndex];
-        // Remove the cards from the source column
-        sourceColumn.cards = sourceColumn.cards.slice(0, sourceCardIndex);
-        // Reveal the new top card if it exists and is face down
-        if (sourceColumn.cards.length > 0 && !sourceColumn.cards[sourceColumn.cards.length - 1].isFaceUp) {
-          sourceColumn.cards[sourceColumn.cards.length - 1].isFaceUp = true;
+  const moveCardsToTableau = useCallback((cards: Card[], sourcePile: string, sourcePileIndex: number, targetPileIndex: number, sourceCardIndex?: number) => {
+    const newState = JSON.parse(JSON.stringify(gameState));
+    
+    if (sourcePile === 'tableau') {
+      const sourceColumn = newState.tableau[sourcePileIndex];
+      // Remove the cards from the source column
+      sourceColumn.cards = sourceColumn.cards.slice(0, sourceCardIndex);
+      // Reveal the new top card if it exists and is face down
+      if (sourceColumn.cards.length > 0 && !sourceColumn.cards[sourceColumn.cards.length - 1].isFaceUp) {
+        sourceColumn.cards[sourceColumn.cards.length - 1].isFaceUp = true;
+      }
+    } else if (sourcePile === 'waste') {
+      newState.waste = newState.waste.slice(0, -1);
+    } else if (sourcePile === 'foundation') {
+      const foundation = newState.foundations[sourcePileIndex];
+      foundation.cards = foundation.cards.slice(0, -1);
+    }
+    
+    // Add all cards to the target column
+    newState.tableau[targetPileIndex].cards.push(...cards);
+    
+    updateGameState(newState);
+  }, [gameState, updateGameState]);
+
+  const moveCardToFoundation = useCallback((sourcePile: string, sourcePileIndex: number, targetPileIndex: number) => {
+    const newState = JSON.parse(JSON.stringify(gameState));
+    
+    // Get and remove the card in one operation
+    let card: Card | null = null;
+    switch (sourcePile) {
+      case 'tableau':
+        const column = newState.tableau[sourcePileIndex];
+        if (column.cards.length > 0) {
+          card = column.cards[column.cards.length - 1];
+          column.cards = column.cards.slice(0, -1);
+          if (column.cards.length > 0 && !column.cards[column.cards.length - 1].isFaceUp) {
+            column.cards[column.cards.length - 1].isFaceUp = true;
+          }
         }
-      } else if (sourcePile === 'waste') {
-        newState.waste = newState.waste.slice(0, -1);
-      } else if (sourcePile === 'foundation') {
+        break;
+      case 'waste':
+        if (newState.waste.length > 0) {
+          card = newState.waste[newState.waste.length - 1];
+          newState.waste = newState.waste.slice(0, -1);
+        }
+        break;
+      case 'foundation':
         const foundation = newState.foundations[sourcePileIndex];
-        foundation.cards = foundation.cards.slice(0, -1);
-      }
-      
-      // Add all cards to the target column
-      newState.tableau[targetPileIndex].cards.push(...cards);
-      
-      return newState;
-    });
-  };
+        if (foundation.cards.length > 0) {
+          card = foundation.cards[foundation.cards.length - 1];
+          foundation.cards = foundation.cards.slice(0, -1);
+        }
+        break;
+    }
+    
+    if (card) {
+      newState.foundations[targetPileIndex].cards.push(card);
+    }
+    
+    updateGameState(newState);
+  }, [gameState, updateGameState]);
 
-  const moveCardToFoundation = (sourcePile: string, sourcePileIndex: number, targetPileIndex: number) => {
-    setGameState(prevState => {
-      // Create a deep copy of the state to avoid reference issues
-      const newState = JSON.parse(JSON.stringify(prevState));
-      
-      // Get and remove the card in one operation
-      let card: Card | null = null;
-      switch (sourcePile) {
-        case 'tableau':
-          const column = newState.tableau[sourcePileIndex];
-          if (column.cards.length > 0) {
-            card = column.cards[column.cards.length - 1];
-            column.cards = column.cards.slice(0, -1);
-            if (column.cards.length > 0 && !column.cards[column.cards.length - 1].isFaceUp) {
-              column.cards[column.cards.length - 1].isFaceUp = true;
-            }
-          }
-          break;
-        case 'waste':
-          if (newState.waste.length > 0) {
-            card = newState.waste[newState.waste.length - 1];
-            newState.waste = newState.waste.slice(0, -1);
-          }
-          break;
-        case 'foundation':
-          const foundation = newState.foundations[sourcePileIndex];
-          if (foundation.cards.length > 0) {
-            card = foundation.cards[foundation.cards.length - 1];
-            foundation.cards = foundation.cards.slice(0, -1);
-          }
-          break;
+  const moveSingleCardToFoundation = useCallback((card: Card, sourcePile: string, sourcePileIndex: number, targetPileIndex: number, sourceCardIndex?: number) => {
+    const newState = JSON.parse(JSON.stringify(gameState));
+    
+    if (sourcePile === 'tableau') {
+      const sourceColumn = newState.tableau[sourcePileIndex];
+      // Remove the specific card
+      sourceColumn.cards.splice(sourceCardIndex, 1);
+      // Reveal the new top card if it exists and is face down
+      if (sourceColumn.cards.length > 0 && !sourceColumn.cards[sourceColumn.cards.length - 1].isFaceUp) {
+        sourceColumn.cards[sourceColumn.cards.length - 1].isFaceUp = true;
       }
-      
-      if (card) {
-        newState.foundations[targetPileIndex].cards.push(card);
-      }
-      
-      return newState;
-    });
-  };
+    } else if (sourcePile === 'waste') {
+      newState.waste = newState.waste.slice(0, -1);
+    }
+    
+    // Add the card to the foundation
+    newState.foundations[targetPileIndex].cards.push(card);
+    
+    updateGameState(newState);
+  }, [gameState, updateGameState]);
 
-  const drawCards = () => {
-    setGameState(prevState => {
-      if (prevState.stock.length === 0) {
-        // If stock is empty, recycle waste pile
-        return {
-          ...prevState,
-          stock: [...prevState.waste].reverse(),
-          waste: [],
-        };
-      } else {
-        // Draw one card from stock and turn it face up
-        const drawnCard = prevState.stock[prevState.stock.length - 1];
-        drawnCard.isFaceUp = true;
-        
-        return {
-          ...prevState,
-          stock: prevState.stock.slice(0, -1),
-          waste: [...prevState.waste, drawnCard],
-        };
-      }
-    });
-  };
+  const drawCards = useCallback(() => {
+    const newState = JSON.parse(JSON.stringify(gameState));
+    
+    if (newState.stock.length === 0) {
+      // If stock is empty, recycle waste pile
+      newState.stock = [...newState.waste].reverse();
+      newState.waste = [];
+    } else {
+      // Draw one card from stock and turn it face up
+      const drawnCard = newState.stock[newState.stock.length - 1];
+      drawnCard.isFaceUp = true;
+      
+      newState.stock = newState.stock.slice(0, -1);
+      newState.waste = [...newState.waste, drawnCard];
+    }
+    
+    updateGameState(newState);
+  }, [gameState, updateGameState]);
+
+  const renderWasteCard = useMemo(() => {
+    if (gameState.waste.length === 0) return null;
+    const card = gameState.waste[gameState.waste.length - 1];
+    return (
+      <CardContainer
+        key={`waste-${gameState.waste.length - 1}`}
+        card={card}
+        pileType="waste"
+        pileIndex={gameState.waste.length - 1}
+        isSelected={gameState.selectedCard === card && gameState.selectedPile === 'waste'}
+        onCardClick={handleCardClick}
+        onCardDoubleClick={handleCardDoubleClick}
+        onCardDragStart={handleCardDragStart}
+        onCardDragEnd={handleCardDragEnd}
+        isDraggable={true}
+      />
+    );
+  }, [gameState.waste, gameState.selectedCard, gameState.selectedPile, handleCardClick, handleCardDoubleClick, handleCardDragStart, handleCardDragEnd]);
+
+  const renderFoundationCard = useCallback((foundation: { suit: string; cards: Card[] }, index: number) => {
+    if (foundation.cards.length === 0) {
+      return <div className="empty-foundation" />;
+    }
+    const card = foundation.cards[foundation.cards.length - 1];
+    return (
+      <CardContainer
+        key={`foundation-${index}`}
+        card={card}
+        pileType="foundation"
+        pileIndex={index}
+        isSelected={gameState.selectedCard === card && gameState.selectedPile === 'foundation'}
+        onCardClick={handleCardClick}
+        onCardDoubleClick={handleCardDoubleClick}
+        onCardDragStart={handleCardDragStart}
+        onCardDragEnd={handleCardDragEnd}
+        isDraggable={true}
+      />
+    );
+  }, [gameState.selectedCard, gameState.selectedPile, handleCardClick, handleCardDoubleClick, handleCardDragStart, handleCardDragEnd]);
+
+  const renderTableauCard = useCallback((card: Card, columnIndex: number, cardIndex: number) => {
+    return (
+      <div
+        key={`tableau-${columnIndex}-${cardIndex}`}
+        className="tableau-card"
+        style={{ marginTop: cardIndex > 0 ? '-100px' : '0' }}
+      >
+        <CardContainer
+          card={card}
+          pileType="tableau"
+          pileIndex={columnIndex}
+          isSelected={gameState.selectedCard === card && gameState.selectedPile === 'tableau'}
+          onCardClick={handleCardClick}
+          onCardDoubleClick={handleCardDoubleClick}
+          onCardDragStart={handleCardDragStart}
+          onCardDragEnd={handleCardDragEnd}
+          isDraggable={card.isFaceUp}
+        />
+      </div>
+    );
+  }, [gameState.selectedCard, gameState.selectedPile, handleCardClick, handleCardDoubleClick, handleCardDragStart, handleCardDragEnd]);
 
   return (
     <div className="game-board">
@@ -251,17 +333,7 @@ const GameBoard: React.FC = () => {
             )}
           </div>
           <div className="waste">
-            {gameState.waste.length > 0 && (
-              <CardComponent
-                key={`waste-${gameState.waste.length - 1}`}
-                card={gameState.waste[gameState.waste.length - 1]}
-                onClick={() => handleCardClick(gameState.waste[gameState.waste.length - 1], 'waste', gameState.waste.length - 1)}
-                onDoubleClick={() => handleCardDoubleClick(gameState.waste[gameState.waste.length - 1], 'waste', gameState.waste.length - 1)}
-                isSelected={gameState.selectedCard === gameState.waste[gameState.waste.length - 1] && gameState.selectedPile === 'waste'}
-                isDraggable={true}
-                onDragStart={(e) => handleDragStart(e, gameState.waste[gameState.waste.length - 1], 'waste', gameState.waste.length - 1)}
-              />
-            )}
+            {renderWasteCard}
           </div>
         </div>
         <div className="foundations">
@@ -272,18 +344,7 @@ const GameBoard: React.FC = () => {
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => handleDrop(e, 'foundation', index)}
             >
-              {foundation.cards.length > 0 ? (
-                <CardComponent
-                  card={foundation.cards[foundation.cards.length - 1]}
-                  onClick={() => handleCardClick(foundation.cards[foundation.cards.length - 1], 'foundation', index)}
-                  onDoubleClick={() => handleCardDoubleClick(foundation.cards[foundation.cards.length - 1], 'foundation', index)}
-                  isSelected={gameState.selectedCard === foundation.cards[foundation.cards.length - 1] && gameState.selectedPile === 'foundation'}
-                  isDraggable={true}
-                  onDragStart={(e) => handleDragStart(e, foundation.cards[foundation.cards.length - 1], 'foundation', index)}
-                />
-              ) : (
-                <div className="empty-foundation" />
-              )}
+              {renderFoundationCard(foundation, index)}
             </div>
           ))}
         </div>
@@ -299,25 +360,16 @@ const GameBoard: React.FC = () => {
             {column.cards.length === 0 ? (
               <div className="empty-tableau" />
             ) : (
-              column.cards.map((card, cardIndex) => (
-                <div
-                  key={`tableau-${columnIndex}-${cardIndex}`}
-                  className="tableau-card"
-                  style={{ marginTop: cardIndex > 0 ? '-100px' : '0' }}
-                >
-                  <CardComponent
-                    card={card}
-                    onClick={() => handleCardClick(card, 'tableau', columnIndex)}
-                    onDoubleClick={() => handleCardDoubleClick(card, 'tableau', columnIndex)}
-                    isSelected={gameState.selectedCard === card && gameState.selectedPile === 'tableau'}
-                    isDraggable={card.isFaceUp}
-                    onDragStart={(e) => handleDragStart(e, card, 'tableau', columnIndex)}
-                  />
-                </div>
-              ))
+              column.cards.map((card, cardIndex) => renderTableauCard(card, columnIndex, cardIndex))
             )}
           </div>
         ))}
+      </div>
+      <div className="controls">
+        <UndoButton 
+          onClick={handleUndo}
+          disabled={gameHistory.length <= 1}
+        />
       </div>
     </div>
   );

@@ -81,4 +81,10 @@
 
 .tableau-card:not(.card-back) {
   z-index: 2;
+}
+
+.controls {
+  display: flex;
+  justify-content: center;
+  padding: 20px;
 } 
