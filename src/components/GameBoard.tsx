@@ -25,6 +25,7 @@ const GameBoard: React.FC = () => {
   const [gameHistory, setGameHistory] = useState<GameState[]>([]);
   const [startTime, setStartTime] = useState(Date.now());
   const [isGameRunning, setIsGameRunning] = useState(true);
+  const [hasWon, setHasWon] = useState(false);
 
   useEffect(() => {
     initializeGame();
@@ -54,10 +55,35 @@ const GameBoard: React.FC = () => {
     setGameHistory([initialState]);
   }, []);
 
+  const checkWinCondition = useCallback((state: GameState) => {
+    // Game is won when:
+    // 1. Stock pile is empty
+    // 2. Waste pile is empty
+    // 3. All tableau cards are face up
+    
+    if (state.stock.length > 0 || state.waste.length > 0) {
+      return false;
+    }
+
+    // Check if all tableau cards are face up
+    for (const column of state.tableau) {
+      for (const card of column.cards) {
+        if (!card.isFaceUp) {
+          return false;
+        }
+      }
+    }
+
+    setHasWon(true);
+    setIsGameRunning(false);
+    return true;
+  }, []);
+
   const updateGameState = useCallback((newState: GameState) => {
     setGameState(newState);
     setGameHistory(prev => [...prev, newState]);
-  }, []);
+    checkWinCondition(newState);
+  }, [checkWinCondition]);
 
   const handleUndo = useCallback(() => {
     if (gameHistory.length > 1) {
@@ -381,6 +407,7 @@ const GameBoard: React.FC = () => {
   const startNewGame = useCallback(() => {
     setStartTime(Date.now());
     setIsGameRunning(true);
+    setHasWon(false);
     initializeGame();
   }, [initializeGame]);
 
@@ -391,11 +418,29 @@ const GameBoard: React.FC = () => {
       setGameHistory([initialState]);
       setStartTime(Date.now());
       setIsGameRunning(true);
+      setHasWon(false);
     }
   }, [gameHistory]);
 
+  const renderWinMessage = () => {
+    if (!hasWon) return null;
+
+    return (
+      <div className="win-overlay">
+        <div className="win-message">
+          <h2>Congratulations!</h2>
+          <p>You've won the game!</p>
+          <button className="control-button" onClick={startNewGame}>
+            Play Again
+          </button>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="game-board">
+      {renderWinMessage()}
       <div className="top-section">
         <div className="stock-waste">
           <div className="stock" onClick={drawCards}>

@@ -135,4 +135,42 @@
   min-width: 90px;
   text-align: center;
   white-space: nowrap;
+}
+
+.win-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 1000;
+}
+
+.win-message {
+  background-color: white;
+  padding: 32px;
+  border-radius: 8px;
+  text-align: center;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.win-message h2 {
+  color: #1976d2;
+  margin: 0 0 16px 0;
+  font-size: 2rem;
+}
+
+.win-message p {
+  color: #333;
+  margin: 0 0 24px 0;
+  font-size: 1.2rem;
+}
+
+.win-message .control-button {
+  font-size: 1.1rem;
+  padding: 8px 24px;
 } 
