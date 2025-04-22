@@ -1,0 +1,84 @@
+.game-board {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 20px;
+  background-color: #2e7d32;
+  min-height: 100vh;
+}
+
+.top-section {
+  display: flex;
+  justify-content: space-between;
+  padding: 0 20px;
+}
+
+.stock-waste {
+  display: flex;
+  gap: 20px;
+}
+
+.stock,
+.waste,
+.foundation {
+  width: 100px;
+  height: 140px;
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.waste {
+  overflow: hidden;
+}
+
+.waste .card {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+.foundations {
+  display: flex;
+  gap: 20px;
+}
+
+.empty-foundation {
+  width: 100px;
+  height: 140px;
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+}
+
+.empty-tableau {
+  width: 100px;
+  height: 140px;
+  border: 2px dashed rgba(255, 255, 255, 0.3);
+  border-radius: 8px;
+  background-color: rgba(255, 255, 255, 0.1);
+}
+
+.tableau {
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  padding: 20px;
+}
+
+.tableau-column {
+  display: flex;
+  flex-direction: column;
+  min-height: 140px;
+}
+
+.tableau-card {
+  position: relative;
+  z-index: 1;
+}
+
+.tableau-card:not(.card-back) {
+  z-index: 2;
+} 

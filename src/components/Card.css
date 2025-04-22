@@ -1,0 +1,101 @@
+.card {
+  width: 100px;
+  height: 140px;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  position: relative;
+  user-select: none;
+  overflow: hidden;
+}
+
+.card:not(.card-back) {
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+.card:not(.card-back):hover {
+  transform: translateY(-5px);
+}
+
+.card-back {
+  background: linear-gradient(45deg, #1a237e, #283593);
+  background-size: 200% 200%;
+  animation: gradient 3s ease infinite;
+  border: 2px solid white;
+  cursor: default;
+}
+
+.card.selected {
+  box-shadow: 0 0 0 2px #4CAF50;
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.card-content {
+  width: 100%;
+  height: 100%;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  box-sizing: border-box;
+}
+
+.card-top,
+.card-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  height: 20px;
+}
+
+.card-top {
+  flex-direction: row;
+}
+
+.card-bottom {
+  flex-direction: row-reverse;
+  transform: rotate(180deg);
+}
+
+.card-center {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-grow: 1;
+}
+
+.card-rank {
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin: 0 4px;
+}
+
+.card-suit {
+  font-size: 1.2rem;
+  margin: 0 4px;
+}
+
+.card-suit-large {
+  font-size: 3rem;
+}
+
+.red {
+  color: #d32f2f;
+}
+
+.black {
+  color: #212121;
+} 
