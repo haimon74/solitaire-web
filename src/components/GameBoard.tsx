@@ -64,101 +64,6 @@ const GameBoard: React.FC = () => {
     }
   }, [gameHistory]);
 
-  const handleCardClick = useCallback((card: Card, pileType: 'tableau' | 'waste' | 'foundation', pileIndex: number) => {
-    updateGameState({
-      ...gameState,
-      selectedCard: card,
-      selectedPile: pileType,
-      selectedPileIndex: pileIndex,
-    });
-  }, [gameState, updateGameState]);
-
-  const handleCardDoubleClick = useCallback((card: Card, pileType: 'tableau' | 'waste' | 'foundation', pileIndex: number) => {
-    if (!card.isFaceUp) return;
-
-    // Try to move the card to any foundation pile
-    for (let i = 0; i < gameState.foundations.length; i++) {
-      const foundation = gameState.foundations[i];
-      if (Deck.canPlaceCardOnFoundation(card, foundation.cards)) {
-        if (pileType === 'tableau') {
-          const column = gameState.tableau[pileIndex];
-          const cardIndex = column.cards.findIndex(c => c === card);
-          if (cardIndex !== -1) {
-            // If it's the only card in the stack, move it directly
-            if (cardIndex === column.cards.length - 1) {
-              moveCardToFoundation(pileType, pileIndex, i);
-            } else {
-              // Otherwise, move just this card
-              moveSingleCardToFoundation(card, pileType, pileIndex, i, cardIndex);
-            }
-          }
-        } else {
-          moveCardToFoundation(pileType, pileIndex, i);
-        }
-        break;
-      }
-    }
-  }, [gameState]);
-
-  const handleCardDragStart = useCallback((e: React.DragEvent, card: Card, pileType: 'tableau' | 'waste' | 'foundation', pileIndex: number) => {
-    if (pileType === 'tableau') {
-      const column = gameState.tableau[pileIndex];
-      const cardIndex = column.cards.findIndex(c => c === card);
-      if (cardIndex !== -1) {
-        // Get all cards from the selected card to the top of the column
-        const cardsToMove = column.cards.slice(cardIndex);
-        e.dataTransfer.setData('text/plain', JSON.stringify({
-          cards: cardsToMove,
-          sourcePile: pileType,
-          sourcePileIndex: pileIndex,
-          sourceCardIndex: cardIndex,
-        }));
-      }
-    } else {
-      // For waste and foundation, only move the top card
-      e.dataTransfer.setData('text/plain', JSON.stringify({
-        cards: [card],
-        sourcePile: pileType,
-        sourcePileIndex: pileIndex,
-      }));
-    }
-  }, [gameState]);
-
-  const handleCardDragEnd = useCallback((e: React.DragEvent) => {
-    // Reset any drag-related state if needed
-  }, []);
-
-  const handleDrop = useCallback((e: React.DragEvent, targetPileType: 'tableau' | 'waste' | 'foundation', targetPileIndex: number) => {
-    e.preventDefault();
-    const data = JSON.parse(e.dataTransfer.getData('text/plain'));
-    const { cards: draggedCards, sourcePile, sourcePileIndex, sourceCardIndex } = data;
-
-    if (!draggedCards[0].isFaceUp) return;
-
-    // Handle different move types
-    if (targetPileType === 'foundation') {
-      // Only allow moving a single card to foundation
-      if (draggedCards.length === 1) {
-        const foundation = gameState.foundations[targetPileIndex];
-        if (Deck.canPlaceCardOnFoundation(draggedCards[0], foundation.cards)) {
-          moveCardToFoundation(sourcePile, sourcePileIndex, targetPileIndex);
-        }
-      }
-    } else if (targetPileType === 'tableau') {
-      const targetColumn = gameState.tableau[targetPileIndex];
-      if (targetColumn.cards.length === 0) {
-        if (draggedCards[0].rank === 'K') {
-          moveCardsToTableau(draggedCards, sourcePile, sourcePileIndex, targetPileIndex, sourceCardIndex);
-        }
-      } else {
-        const targetCard = targetColumn.cards[targetColumn.cards.length - 1];
-        if (Deck.canPlaceCardOnTableau(draggedCards[0], targetCard)) {
-          moveCardsToTableau(draggedCards, sourcePile, sourcePileIndex, targetPileIndex, sourceCardIndex);
-        }
-      }
-    }
-  }, [gameState]);
-
   const moveCardsToTableau = useCallback((cards: Card[], sourcePile: string, sourcePileIndex: number, targetPileIndex: number, sourceCardIndex?: number) => {
     const newState = JSON.parse(JSON.stringify(gameState));
     
@@ -241,6 +146,153 @@ const GameBoard: React.FC = () => {
     
     updateGameState(newState);
   }, [gameState, updateGameState]);
+
+  const handleCardClick = useCallback((card: Card, pileType: 'tableau' | 'waste' | 'foundation', pileIndex: number) => {
+    updateGameState({
+      ...gameState,
+      selectedCard: card,
+      selectedPile: pileType,
+      selectedPileIndex: pileIndex,
+    });
+  }, [gameState, updateGameState]);
+
+  const handleCardDoubleClick = useCallback((card: Card, pileType: 'tableau' | 'waste' | 'foundation', pileIndex: number) => {
+    if (!card.isFaceUp) return;
+
+    // Try to find valid moves
+    const validFoundationMoves: { type: 'foundation'; index: number }[] = [];
+    const validTableauMoves: { type: 'tableau'; index: number }[] = [];
+
+    // Check foundation moves first
+    for (let i = 0; i < gameState.foundations.length; i++) {
+      const foundation = gameState.foundations[i];
+      if (Deck.canPlaceCardOnFoundation(card, foundation.cards)) {
+        validFoundationMoves.push({ type: 'foundation', index: i });
+      }
+    }
+
+    // If no foundation moves, check tableau moves
+    if (validFoundationMoves.length === 0) {
+      for (let i = 0; i < gameState.tableau.length; i++) {
+        const targetColumn = gameState.tableau[i];
+        if (targetColumn.cards.length === 0) {
+          if (card.rank === 'K') {
+            validTableauMoves.push({ type: 'tableau', index: i });
+          }
+        } else {
+          const targetCard = targetColumn.cards[targetColumn.cards.length - 1];
+          if (Deck.canPlaceCardOnTableau(card, targetCard)) {
+            validTableauMoves.push({ type: 'tableau', index: i });
+          }
+        }
+      }
+    }
+
+    // Execute the first valid move, prioritizing foundation
+    const move = validFoundationMoves[0] || validTableauMoves[0];
+    if (move) {
+      if (move.type === 'foundation') {
+        if (pileType === 'tableau') {
+          const column = gameState.tableau[pileIndex];
+          const cardIndex = column.cards.findIndex(c => c === card);
+          if (cardIndex !== -1) {
+            if (cardIndex === column.cards.length - 1) {
+              moveCardToFoundation(pileType, pileIndex, move.index);
+            } else {
+              moveSingleCardToFoundation(card, pileType, pileIndex, move.index, cardIndex);
+            }
+          }
+        } else if (pileType === 'waste') {
+          moveCardToFoundation(pileType, pileIndex, move.index);
+        } else if (pileType === 'foundation') {
+          // Only allow moving from foundation to tableau
+          const targetColumn = gameState.tableau[move.index];
+          if (targetColumn.cards.length === 0) {
+            if (card.rank === 'K') {
+              moveCardsToTableau([card], pileType, pileIndex, move.index);
+            }
+          } else {
+            const targetCard = targetColumn.cards[targetColumn.cards.length - 1];
+            if (Deck.canPlaceCardOnTableau(card, targetCard)) {
+              moveCardsToTableau([card], pileType, pileIndex, move.index);
+            }
+          }
+        }
+      } else if (move.type === 'tableau') {
+        if (pileType === 'tableau') {
+          const column = gameState.tableau[pileIndex];
+          const cardIndex = column.cards.findIndex(c => c === card);
+          if (cardIndex !== -1) {
+            const cardsToMove = column.cards.slice(cardIndex);
+            moveCardsToTableau(cardsToMove, pileType, pileIndex, move.index, cardIndex);
+          }
+        } else if (pileType === 'waste') {
+          moveCardsToTableau([card], pileType, pileIndex, move.index);
+        } else if (pileType === 'foundation') {
+          moveCardsToTableau([card], pileType, pileIndex, move.index);
+        }
+      }
+    }
+  }, [gameState, moveCardToFoundation, moveSingleCardToFoundation, moveCardsToTableau]);
+
+  const handleCardDragStart = useCallback((e: React.DragEvent, card: Card, pileType: 'tableau' | 'waste' | 'foundation', pileIndex: number) => {
+    if (pileType === 'tableau') {
+      const column = gameState.tableau[pileIndex];
+      const cardIndex = column.cards.findIndex(c => c === card);
+      if (cardIndex !== -1) {
+        // Get all cards from the selected card to the top of the column
+        const cardsToMove = column.cards.slice(cardIndex);
+        e.dataTransfer.setData('text/plain', JSON.stringify({
+          cards: cardsToMove,
+          sourcePile: pileType,
+          sourcePileIndex: pileIndex,
+          sourceCardIndex: cardIndex,
+        }));
+      }
+    } else {
+      // For waste and foundation, only move the top card
+      e.dataTransfer.setData('text/plain', JSON.stringify({
+        cards: [card],
+        sourcePile: pileType,
+        sourcePileIndex: pileIndex,
+      }));
+    }
+  }, [gameState]);
+
+  const handleCardDragEnd = useCallback((e: React.DragEvent) => {
+    // Reset any drag-related state if needed
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent, targetPileType: 'tableau' | 'waste' | 'foundation', targetPileIndex: number) => {
+    e.preventDefault();
+    const data = JSON.parse(e.dataTransfer.getData('text/plain'));
+    const { cards: draggedCards, sourcePile, sourcePileIndex, sourceCardIndex } = data;
+
+    if (!draggedCards[0].isFaceUp) return;
+
+    // Handle different move types
+    if (targetPileType === 'foundation') {
+      // Only allow moving a single card to foundation
+      if (draggedCards.length === 1) {
+        const foundation = gameState.foundations[targetPileIndex];
+        if (Deck.canPlaceCardOnFoundation(draggedCards[0], foundation.cards)) {
+          moveCardToFoundation(sourcePile, sourcePileIndex, targetPileIndex);
+        }
+      }
+    } else if (targetPileType === 'tableau') {
+      const targetColumn = gameState.tableau[targetPileIndex];
+      if (targetColumn.cards.length === 0) {
+        if (draggedCards[0].rank === 'K') {
+          moveCardsToTableau(draggedCards, sourcePile, sourcePileIndex, targetPileIndex, sourceCardIndex);
+        }
+      } else {
+        const targetCard = targetColumn.cards[targetColumn.cards.length - 1];
+        if (Deck.canPlaceCardOnTableau(draggedCards[0], targetCard)) {
+          moveCardsToTableau(draggedCards, sourcePile, sourcePileIndex, targetPileIndex, sourceCardIndex);
+        }
+      }
+    }
+  }, [gameState]);
 
   const drawCards = useCallback(() => {
     const newState = JSON.parse(JSON.stringify(gameState));
