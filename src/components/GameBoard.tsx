@@ -358,7 +358,7 @@ const GameBoard: React.FC = () => {
       <div
         key={`tableau-${columnIndex}-${cardIndex}`}
         className="tableau-card"
-        style={{ marginTop: cardIndex > 0 ? '-100px' : '0' }}
+        style={{ marginTop: cardIndex > 0 ? (card.isFaceUp ? '-150px' : '-200px') : '0' }}
       >
         <CardContainer
           card={card}

@@ -26,6 +26,62 @@ const Card: React.FC<CardProps> = ({
     colorClass: getColorClass(card.suit),
   }), [card.suit]);
 
+  const renderSuitPattern = () => {
+    const rank = card.rank;
+    if (rank === 'J' || rank === 'Q' || rank === 'K') {
+      return (
+        <div className="card-center">
+          <span className={`card-suit-large ${colorClass}`}>{suitSymbol}</span>
+        </div>
+      );
+    }
+
+    const numericRank = rank === 'A' ? 1 : parseInt(rank);
+    if (isNaN(numericRank)) return null;
+
+    const suitElement = <span className={`card-suit-pattern ${colorClass}`}>{suitSymbol}</span>;
+    
+    if (numericRank === 5) {
+      return (
+        <div className="card-center">
+          <div className={`card-pattern pattern-5`}>
+            {suitElement}
+            {suitElement}
+            {suitElement}
+            {suitElement}
+            {suitElement}
+          </div>
+        </div>
+      );
+    }
+
+    if (numericRank === 7) {
+      return (
+        <div className="card-center">
+          <div className={`card-pattern pattern-7`}>
+            {suitElement}
+            {suitElement}
+            {suitElement}
+            {suitElement}
+            {suitElement}
+            {suitElement}
+            {suitElement}
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="card-center">
+        <div className={`card-pattern pattern-${numericRank}`}>
+          {Array(numericRank).fill(null).map((_, index) => (
+            <React.Fragment key={index}>{suitElement}</React.Fragment>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
   if (!card.isFaceUp) {
     return (
       <div
@@ -50,15 +106,17 @@ const Card: React.FC<CardProps> = ({
     >
       <div className="card-content">
         <div className="card-top">
-          <span className={`card-rank ${colorClass}`}>{card.rank}</span>
-          <span className={`card-suit ${colorClass}`}>{suitSymbol}</span>
+          <div className="card-corner">
+            <span className={`card-rank ${colorClass}`}>{card.rank}</span>
+            <span className={`card-suit ${colorClass}`}>{suitSymbol}</span>
+          </div>
         </div>
-        <div className="card-center">
-          <span className={`card-suit-large ${colorClass}`}>{suitSymbol}</span>
-        </div>
+        {renderSuitPattern()}
         <div className="card-bottom">
-          <span className={`card-rank ${colorClass}`}>{card.rank}</span>
-          <span className={`card-suit ${colorClass}`}>{suitSymbol}</span>
+          <div className="card-corner">
+            <span className={`card-rank ${colorClass}`}>{card.rank}</span>
+            <span className={`card-suit ${colorClass}`}>{suitSymbol}</span>
+          </div>
         </div>
       </div>
     </div>
