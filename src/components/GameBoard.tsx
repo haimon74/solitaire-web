@@ -3,6 +3,7 @@ import { GameState, Card, PileType, TableauColumn, Suit } from '../types';
 import { Deck } from '../utils/Deck';
 import CardContainer from './CardContainer';
 import UndoButton from './UndoButton';
+import Timer from './Timer';
 import './GameBoard.css';
 
 const GameBoard: React.FC = () => {
@@ -22,6 +23,8 @@ const GameBoard: React.FC = () => {
   });
 
   const [gameHistory, setGameHistory] = useState<GameState[]>([]);
+  const [startTime, setStartTime] = useState(Date.now());
+  const [isGameRunning, setIsGameRunning] = useState(true);
 
   useEffect(() => {
     initializeGame();
@@ -375,6 +378,22 @@ const GameBoard: React.FC = () => {
     );
   }, [gameState.selectedCard, gameState.selectedPile, handleCardClick, handleCardDoubleClick, handleCardDragStart, handleCardDragEnd]);
 
+  const startNewGame = useCallback(() => {
+    setStartTime(Date.now());
+    setIsGameRunning(true);
+    initializeGame();
+  }, [initializeGame]);
+
+  const resetGame = useCallback(() => {
+    if (gameHistory.length > 0) {
+      const initialState = gameHistory[0];
+      setGameState(initialState);
+      setGameHistory([initialState]);
+      setStartTime(Date.now());
+      setIsGameRunning(true);
+    }
+  }, [gameHistory]);
+
   return (
     <div className="game-board">
       <div className="top-section">
@@ -387,6 +406,19 @@ const GameBoard: React.FC = () => {
           <div className="waste">
             {renderWasteCard}
           </div>
+        </div>
+        <div className="game-controls">
+          <button className="control-button" onClick={startNewGame}>
+            New Game
+          </button>
+          <button className="control-button" onClick={resetGame}>
+            Reset
+          </button>
+          <Timer startTime={startTime} isRunning={isGameRunning} />
+          <UndoButton 
+            onClick={handleUndo}
+            disabled={gameHistory.length <= 1}
+          />
         </div>
         <div className="foundations">
           {gameState.foundations.map((foundation, index) => (
@@ -416,12 +448,6 @@ const GameBoard: React.FC = () => {
             )}
           </div>
         ))}
-      </div>
-      <div className="controls">
-        <UndoButton 
-          onClick={handleUndo}
-          disabled={gameHistory.length <= 1}
-        />
       </div>
     </div>
   );

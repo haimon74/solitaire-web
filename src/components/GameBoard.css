@@ -11,6 +11,8 @@
   display: flex;
   justify-content: space-between;
   padding: 0 20px;
+  align-items: center;
+  gap: 20px;
 }
 
 .stock-waste {
@@ -93,4 +95,44 @@
   display: flex;
   justify-content: center;
   padding: 20px;
+}
+
+.game-controls {
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  align-items: center;
+}
+
+.control-button {
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  color: white;
+  background-color: #1976d2;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  white-space: nowrap;
+  min-width: 80px;
+}
+
+.control-button:hover {
+  background-color: #1565c0;
+}
+
+.control-button:disabled {
+  background-color: #90a4ae;
+  cursor: not-allowed;
+}
+
+.timer {
+  font-size: 0.9rem;
+  color: white;
+  padding: 6px 12px;
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: 4px;
+  min-width: 90px;
+  text-align: center;
+  white-space: nowrap;
 } 

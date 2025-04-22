@@ -26,12 +26,21 @@ const Card: React.FC<CardProps> = ({
     colorClass: getColorClass(card.suit),
   }), [card.suit]);
 
+  const getFaceCardImage = (rank: string, suit: string) => {
+    const suitName = suit.toLowerCase();
+    return `/assets/images/cards/${rank.toLowerCase()}_of_${suitName}.jpg`;
+  };
+
   const renderSuitPattern = () => {
     const rank = card.rank;
     if (rank === 'J' || rank === 'Q' || rank === 'K') {
       return (
         <div className="card-center">
-          <span className={`card-suit-large ${colorClass}`}>{suitSymbol}</span>
+          <img 
+            src={getFaceCardImage(rank, card.suit)}
+            alt={`${rank} of ${card.suit}`}
+            className="card-face-image"
+          />
         </div>
       );
     }
