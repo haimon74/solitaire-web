@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
-import { GameState, Card, PileType, TableauColumn, Suit } from '../types';
+import { GameState, Card, Suit } from '../types';
 import { Deck } from '../utils/Deck';
 import CardContainer from './CardContainer';
 import UndoButton from './UndoButton';
@@ -26,13 +26,23 @@ const GameBoard: React.FC = () => {
   const [startTime, setStartTime] = useState(Date.now());
   const [isGameRunning, setIsGameRunning] = useState(true);
   const [hasWon, setHasWon] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [deck, setDeck] = useState<Deck | null>(null);
 
   useEffect(() => {
-    initializeGame();
+    const newDeck = new Deck();
+    setDeck(newDeck);
+
+    newDeck.onGameReady((isSolvable) => {
+      if (isSolvable) {
+        initializeGame(newDeck);
+        setIsLoading(false);
+      }
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  const initializeGame = useCallback(() => {
-    const deck = new Deck();
+  const initializeGame = useCallback((deck: Deck) => {
     const tableau = deck.dealTableau();
     const stock = deck.getRemainingCards();
 
@@ -321,6 +331,7 @@ const GameBoard: React.FC = () => {
         }
       }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameState]);
 
   const drawCards = useCallback(() => {
@@ -328,15 +339,16 @@ const GameBoard: React.FC = () => {
     
     if (newState.stock.length === 0) {
       // If stock is empty, recycle waste pile
-      newState.stock = [...newState.waste].reverse();
+      newState.stock = [...newState.waste].reverse().map(card => ({ ...card, isFaceUp: false }));
       newState.waste = [];
     } else {
       // Draw one card from stock and turn it face up
       const drawnCard = newState.stock[newState.stock.length - 1];
-      drawnCard.isFaceUp = true;
-      
-      newState.stock = newState.stock.slice(0, -1);
-      newState.waste = [...newState.waste, drawnCard];
+      if (drawnCard) {
+        drawnCard.isFaceUp = true;
+        newState.stock = newState.stock.slice(0, -1);
+        newState.waste = [...newState.waste, drawnCard];
+      }
     }
     
     updateGameState(newState);
@@ -405,11 +417,23 @@ const GameBoard: React.FC = () => {
   }, [gameState.selectedCard, gameState.selectedPile, handleCardClick, handleCardDoubleClick, handleCardDragStart, handleCardDragEnd]);
 
   const startNewGame = useCallback(() => {
+    if (!deck) return;
+    
     setStartTime(Date.now());
     setIsGameRunning(true);
     setHasWon(false);
-    initializeGame();
-  }, [initializeGame]);
+    setIsLoading(true);
+    
+    const newDeck = new Deck();
+    setDeck(newDeck);
+    
+    newDeck.onGameReady((isSolvable) => {
+      if (isSolvable) {
+        initializeGame(newDeck);
+        setIsLoading(false);
+      }
+    });
+  }, [deck, initializeGame]);
 
   const resetGame = useCallback(() => {
     if (gameHistory.length > 0) {
@@ -438,8 +462,22 @@ const GameBoard: React.FC = () => {
     );
   };
 
+  const renderLoadingState = () => {
+    if (!isLoading) return null;
+
+    return (
+      <div className="loading-overlay">
+        <div className="loading-spinner">
+          <div className="spinner"></div>
+          <p>Checking game solvability...</p>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="game-board">
+      {renderLoadingState()}
       {renderWinMessage()}
       <div className="top-section">
         <div className="stock-waste">

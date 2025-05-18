@@ -1,6 +1,7 @@
 import React from 'react';
 import GameBoard from './components/GameBoard';
 import './App.css';
+// import GenerateSolvableDecks from './GenerateSolvableDecks';
 
 function App() {
   return (
@@ -10,6 +11,7 @@ function App() {
       </header>
       <main>
         <GameBoard />
+        {/* <GenerateSolvableDecks /> */}
       </main>
     </div>
   );
