@@ -25,8 +25,8 @@ function getRandomStockPositions(count: number): number[] {
 function generateSolvableDeck(): Card[] {
   const ranks: Rank[] = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
   const suits: Suit[] = ['hearts', 'diamonds', 'clubs', 'spades'];
-  const redSuits: Suit[] = ['hearts', 'diamonds'];
-  const blackSuits: Suit[] = ['clubs', 'spades'];
+  // const redSuits: Suit[] = ['hearts', 'diamonds'];
+  // const blackSuits: Suit[] = ['clubs', 'spades'];
 
   // Create all 52 cards and shuffle them
   const allCards: Card[] = [];

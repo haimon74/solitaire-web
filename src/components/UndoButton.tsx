@@ -1,5 +1,5 @@
 import React from 'react';
-import './UndoButton.css';
+import styles from './UndoButton.module.css';
 
 interface UndoButtonProps {
   onClick: () => void;
@@ -9,7 +9,7 @@ interface UndoButtonProps {
 const UndoButton: React.FC<UndoButtonProps> = ({ onClick, disabled }) => {
   return (
     <button 
-      className="control-button"
+      className={`${styles.undoButton} ${disabled ? styles.disabled : ''}`}
       onClick={onClick}
       disabled={disabled}
     >

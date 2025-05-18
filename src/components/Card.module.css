@@ -9,17 +9,17 @@
   overflow: hidden;
 }
 
-.card:not(.card-back) {
+.card:not(.cardBack) {
   cursor: pointer;
   transition: transform 0.2s;
   border: 2px solid lightgray;
 }
 
-.card:not(.card-back):hover {
+.card:not(.cardBack):hover {
   transform: translateY(-5px);
 }
 
-.card-back {
+.cardBack {
   background: linear-gradient(45deg, #1a237e, #283593);
   background-size: 200% 200%;
   animation: gradient 3s ease infinite;
@@ -43,7 +43,7 @@
   }
 }
 
-.card-content {
+.cardContent {
   width: 100%;
   height: 100%;
   padding: 4px 4px;
@@ -53,8 +53,8 @@
   box-sizing: border-box;
 }
 
-.card-top,
-.card-bottom {
+.cardTop,
+.cardBottom {
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;
@@ -62,12 +62,12 @@
   height: 16px;
 }
 
-.card-bottom {
+.cardBottom {
   justify-content: flex-end;
   align-items: flex-end;
 }
 
-.card-corner {
+.cardCorner {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -75,12 +75,12 @@
 }
 
 /* Remove the 180-degree rotation and handle bottom corner explicitly */
-.card-bottom .card-corner {
+.cardBottom .cardCorner {
   flex-direction: column;
   transform: rotate(180deg);
 }
 
-.card-center {
+.cardCenter {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -89,14 +89,14 @@
   box-sizing: border-box;
 }
 
-.card-face-image {
+.cardFaceImage {
   max-width: 75%;
   max-height: 120px;
   object-fit: contain;
   border-radius: 4px;
 }
 
-.card-pattern {
+.cardPattern {
   display: grid;
   width: 100%;
   height: 100%;
@@ -106,83 +106,83 @@
   box-sizing: border-box;
 }
 
-.pattern-1 {
+.pattern1 {
   grid-template-columns: 1fr;
   grid-template-rows: 1fr;
 }
 
-.pattern-2 {
+.pattern2 {
   grid-template-columns: 1fr;
   grid-template-rows: repeat(2, 1fr);
 }
 
-.pattern-3 {
+.pattern3 {
   grid-template-columns: 1fr;
   grid-template-rows: repeat(3, 1fr);
 }
 
-.pattern-4 {
+.pattern4 {
   grid-template-columns: repeat(2, 1fr);
   grid-template-rows: repeat(2, 1fr);
 }
 
-.pattern-5 {
+.pattern5 {
   grid-template-columns: repeat(2, 1fr);
   grid-template-rows: repeat(3, 1fr);
 }
 
-.pattern-5 span:nth-child(3) {
+.pattern5 span:nth-child(3) {
   grid-column: 1 / -1;
   grid-row: 2;
 }
 
-.pattern-6 {
+.pattern6 {
   grid-template-columns: repeat(2, 1fr);
   grid-template-rows: repeat(3, 1fr);
 }
 
-.pattern-7 {
+.pattern7 {
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
 }
 
-.pattern-7 span:nth-child(1) {
+.pattern7 span:nth-child(1) {
   grid-column: 1;
   grid-row: 1;
 }
 
-.pattern-7 span:nth-child(2) {
+.pattern7 span:nth-child(2) {
   grid-column: 3;
   grid-row: 1;
 }
 
-.pattern-7 span:nth-child(3),
-.pattern-7 span:nth-child(4),
-.pattern-7 span:nth-child(5) {
+.pattern7 span:nth-child(3),
+.pattern7 span:nth-child(4),
+.pattern7 span:nth-child(5) {
   grid-row: 2;
 }
 
-.pattern-7 span:nth-child(6) {
+.pattern7 span:nth-child(6) {
   grid-column: 1;
   grid-row: 3;
 }
 
-.pattern-7 span:nth-child(7) {
+.pattern7 span:nth-child(7) {
   grid-column: 3;
   grid-row: 3;
 }
 
-.pattern-8 {
+.pattern8 {
   grid-template-columns: repeat(2, 1fr);
   grid-template-rows: repeat(4, 1fr);
 }
 
-.pattern-9 {
+.pattern9 {
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(3, 1fr);
 }
 
-.pattern-10 {
+.pattern10 {
   grid-template-columns: repeat(3, 1fr);
   grid-template-rows: repeat(4, 1fr);
 }
@@ -219,24 +219,24 @@
   grid-row: 4;
 }
 
-.card-suit-pattern {
+.cardSuitPattern {
   font-size: 32px;
 }
 
-.card-rank {
+.cardRank {
   font-size: 1.5rem;
   font-weight: bold;
   margin: 0;
   line-height: 1;
 }
 
-.card-suit {
+.cardSuit {
   font-size: 1.5rem;
   margin: 0;
   line-height: 1;
 }
 
-.card-suit-large {
+.cardSuitLarge {
   font-size: 4rem;
 }
 

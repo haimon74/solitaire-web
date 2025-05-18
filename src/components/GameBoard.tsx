@@ -4,7 +4,8 @@ import { Deck } from '../utils/Deck';
 import CardContainer from './CardContainer';
 import UndoButton from './UndoButton';
 import Timer from './Timer';
-import './GameBoard.css';
+import styles from './GameBoard.module.css';
+import cardStyles from './Card.module.css';
 
 const GameBoard: React.FC = () => {
   const [gameState, setGameState] = useState<GameState>({
@@ -375,7 +376,7 @@ const GameBoard: React.FC = () => {
 
   const renderFoundationCard = useCallback((foundation: { suit: string; cards: Card[] }, index: number) => {
     if (foundation.cards.length === 0) {
-      return <div className="empty-foundation" />;
+      return <div className={styles.emptyFoundation} />;
     }
     const card = foundation.cards[foundation.cards.length - 1];
     return (
@@ -398,7 +399,7 @@ const GameBoard: React.FC = () => {
     return (
       <div
         key={`tableau-${columnIndex}-${cardIndex}`}
-        className="tableau-card"
+        className={styles.tableauCard}
         style={{ marginTop: cardIndex > 0 ? (card.isFaceUp ? '-150px' : '-200px') : '0' }}
       >
         <CardContainer
@@ -450,11 +451,11 @@ const GameBoard: React.FC = () => {
     if (!hasWon) return null;
 
     return (
-      <div className="win-overlay">
-        <div className="win-message">
+      <div className={styles.winOverlay}>
+        <div className={styles.winMessage}>
           <h2>Congratulations!</h2>
           <p>You've won the game!</p>
-          <button className="control-button" onClick={startNewGame}>
+          <button className={styles.controlButton} onClick={startNewGame}>
             Play Again
           </button>
         </div>
@@ -466,9 +467,9 @@ const GameBoard: React.FC = () => {
     if (!isLoading) return null;
 
     return (
-      <div className="loading-overlay">
-        <div className="loading-spinner">
-          <div className="spinner"></div>
+      <div className={styles.loadingOverlay}>
+        <div className={styles.loadingSpinner}>
+          <div className={styles.spinner}></div>
           <p>Checking game solvability...</p>
         </div>
       </div>
@@ -476,25 +477,25 @@ const GameBoard: React.FC = () => {
   };
 
   return (
-    <div className="game-board">
+    <div className={styles.gameBoard}>
       {renderLoadingState()}
       {renderWinMessage()}
-      <div className="top-section">
-        <div className="stock-waste">
-          <div className="stock" onClick={drawCards}>
+      <div className={styles.topSection}>
+        <div className={styles.stockWaste}>
+          <div className={styles.stock} onClick={drawCards}>
             {gameState.stock.length > 0 && (
-              <div className="card card-back" />
+              <div className={`${cardStyles.card} ${cardStyles.cardBack}`} />
             )}
           </div>
-          <div className="waste">
+          <div className={styles.waste}>
             {renderWasteCard}
           </div>
         </div>
-        <div className="game-controls">
-          <button className="control-button" onClick={startNewGame}>
+        <div className={styles.gameControls}>
+          <button className={styles.controlButton} onClick={startNewGame}>
             New Game
           </button>
-          <button className="control-button" onClick={resetGame}>
+          <button className={styles.controlButton} onClick={resetGame}>
             Reset
           </button>
           <Timer startTime={startTime} isRunning={isGameRunning} />
@@ -503,11 +504,11 @@ const GameBoard: React.FC = () => {
             disabled={gameHistory.length <= 1}
           />
         </div>
-        <div className="foundations">
+        <div className={styles.foundations}>
           {gameState.foundations.map((foundation, index) => (
             <div
               key={`foundation-${index}`}
-              className="foundation"
+              className={styles.foundation}
               onDragOver={(e) => e.preventDefault()}
               onDrop={(e) => handleDrop(e, 'foundation', index)}
             >
@@ -516,16 +517,16 @@ const GameBoard: React.FC = () => {
           ))}
         </div>
       </div>
-      <div className="tableau">
+      <div className={styles.tableau}>
         {gameState.tableau.map((column, columnIndex) => (
           <div
             key={`tableau-${columnIndex}`}
-            className="tableau-column"
+            className={styles.tableauColumn}
             onDragOver={(e) => e.preventDefault()}
             onDrop={(e) => handleDrop(e, 'tableau', columnIndex)}
           >
             {column.cards.length === 0 ? (
-              <div className="empty-tableau" />
+              <div className={styles.emptyTableau} />
             ) : (
               column.cards.map((card, cardIndex) => renderTableauCard(card, columnIndex, cardIndex))
             )}

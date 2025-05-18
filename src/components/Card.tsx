@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { Card as CardType } from '../types';
-import './Card.css';
+import styles from './Card.module.css';
 
 interface CardProps {
   card: CardType;
@@ -35,11 +35,11 @@ const Card: React.FC<CardProps> = ({
     const rank = card.rank;
     if (rank === 'J' || rank === 'Q' || rank === 'K') {
       return (
-        <div className="card-center">
+        <div className={styles.cardCenter}>
           <img 
             src={getFaceCardImage(rank, card.suit)}
             alt={`${rank} of ${card.suit}`}
-            className="card-face-image"
+            className={styles.cardFaceImage}
           />
         </div>
       );
@@ -48,12 +48,12 @@ const Card: React.FC<CardProps> = ({
     const numericRank = rank === 'A' ? 1 : parseInt(rank);
     if (isNaN(numericRank)) return null;
 
-    const suitElement = <span className={`card-suit-pattern ${colorClass}`}>{suitSymbol}</span>;
+    const suitElement = <span className={`${styles.cardSuitPattern} ${styles[colorClass]}`}>{suitSymbol}</span>;
     
     if (numericRank === 5) {
       return (
-        <div className="card-center">
-          <div className={`card-pattern pattern-5`}>
+        <div className={styles.cardCenter}>
+          <div className={`${styles.cardPattern} ${styles.pattern5}`}>
             {suitElement}
             {suitElement}
             {suitElement}
@@ -66,8 +66,8 @@ const Card: React.FC<CardProps> = ({
 
     if (numericRank === 7) {
       return (
-        <div className="card-center">
-          <div className={`card-pattern pattern-7`}>
+        <div className={styles.cardCenter}>
+          <div className={`${styles.cardPattern} ${styles.pattern7}`}>
             {suitElement}
             {suitElement}
             {suitElement}
@@ -81,8 +81,8 @@ const Card: React.FC<CardProps> = ({
     }
 
     return (
-      <div className="card-center">
-        <div className={`card-pattern pattern-${numericRank}`}>
+      <div className={styles.cardCenter}>
+        <div className={`${styles.cardPattern} ${styles[`pattern${numericRank}`]}`}>
           {Array(numericRank).fill(null).map((_, index) => (
             <React.Fragment key={index}>{suitElement}</React.Fragment>
           ))}
@@ -94,7 +94,7 @@ const Card: React.FC<CardProps> = ({
   if (!card.isFaceUp) {
     return (
       <div
-        className={`card card-back ${isSelected ? 'selected' : ''}`}
+        className={`${styles.card} ${styles.cardBack} ${isSelected ? styles.selected : ''}`}
         onClick={onClick}
         onDoubleClick={onDoubleClick}
         draggable={isDraggable}
@@ -106,25 +106,25 @@ const Card: React.FC<CardProps> = ({
 
   return (
     <div
-      className={`card ${isSelected ? 'selected' : ''}`}
+      className={`${styles.card} ${isSelected ? styles.selected : ''}`}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
       draggable={isDraggable}
       onDragStart={onDragStart}
       onDragEnd={onDragEnd}
     >
-      <div className="card-content">
-        <div className="card-top">
-          <div className="card-corner">
-            <span className={`card-rank ${colorClass}`}>{card.rank}</span>
-            <span className={`card-suit ${colorClass}`}>{suitSymbol}</span>
+      <div className={styles.cardContent}>
+        <div className={styles.cardTop}>
+          <div className={styles.cardCorner}>
+            <span className={`${styles.cardRank} ${styles[colorClass]}`}>{card.rank}</span>
+            <span className={`${styles.cardSuit} ${styles[colorClass]}`}>{suitSymbol}</span>
           </div>
         </div>
         {renderSuitPattern()}
-        <div className="card-bottom">
-          <div className="card-corner">
-            <span className={`card-rank ${colorClass}`}>{card.rank}</span>
-            <span className={`card-suit ${colorClass}`}>{suitSymbol}</span>
+        <div className={styles.cardBottom}>
+          <div className={styles.cardCorner}>
+            <span className={`${styles.cardRank} ${styles[colorClass]}`}>{card.rank}</span>
+            <span className={`${styles.cardSuit} ${styles[colorClass]}`}>{suitSymbol}</span>
           </div>
         </div>
       </div>

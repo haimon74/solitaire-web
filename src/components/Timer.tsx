@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import styles from './GameBoard.module.css';
 
 interface TimerProps {
   startTime: number;
@@ -29,7 +30,7 @@ const Timer: React.FC<TimerProps> = ({ startTime, isRunning }) => {
   };
 
   return (
-    <div className="timer">
+    <div className={styles.timer}>
       Time: {formatTime(seconds)}
     </div>
   );

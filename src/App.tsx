@@ -1,12 +1,12 @@
 import React from 'react';
 import GameBoard from './components/GameBoard';
-import './App.css';
+import styles from './App.module.css';
 // import GenerateSolvableDecks from './GenerateSolvableDecks';
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
+    <div className={styles.App}>
+      <header className={styles.AppHeader}>
         <h1>Klondike Solitaire</h1>
       </header>
       <main>

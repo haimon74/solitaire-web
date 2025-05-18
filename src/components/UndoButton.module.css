@@ -1,4 +1,4 @@
-.undo-button {
+.undoButton {
   padding: 8px 16px;
   font-size: 1rem;
   font-weight: bold;
@@ -13,16 +13,16 @@
   gap: 8px;
 }
 
-.undo-button:hover:not(.disabled) {
+.undoButton:hover:not(.disabled) {
   background-color: #45a049;
 }
 
-.undo-button.disabled {
+.undoButton.disabled {
   background-color: #cccccc;
   cursor: not-allowed;
 }
 
-.undo-icon {
+.undoIcon {
   width: 20px;
   height: 20px;
 } 
